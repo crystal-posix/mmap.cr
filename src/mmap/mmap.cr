@@ -42,6 +42,18 @@ module Mmap
     end
   end
 
+  def readwrite
+    mprotect Prot::ReadWrite
+  end
+
+  def readonly
+    mprotect Prot::Read
+  end
+
+  def noaccess
+    mprotect Prot::None
+  end
+
   def mprotect(prot : Prot) : Nil
     ptr = range_checked_pointer(0, @size)
     r = LibC.mprotect(ptr, @size, prot)

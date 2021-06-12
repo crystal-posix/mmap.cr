@@ -3,7 +3,7 @@
 mmap() bindings for Crystal
 
 ## Todo:
-- [ ] mremap
+- [x] mremap
 - [x] mprotect
 - [ ] madvise
 - [x] mlock
@@ -45,7 +45,7 @@ Mmap::Region.open(16384) do |mmap|
 
   # Create a guard page
   guard_region = mmap[12288, 4096]
-  guard_region.mprotect Mmap::Prot::None
+  guard_region.noaccess
   # Crashes program if accessed
   guard_region.to_slice[0] = 0_u8
 end
@@ -72,6 +72,18 @@ File.open("a_file.txt", "r") do |file|
 end
 ```
 
+## Benchmarks
+```
+IO#read_fully vs mmap for several file sizes
+
+   read 8192 235.83k (  4.24µs) (± 6.34%)  656B/op        fastest
+   mmap 8192 189.03k (  5.29µs) (± 5.52%)  768B/op   1.25× slower
+  read 65536 137.22k (  7.29µs) (± 4.29%)  656B/op   1.72× slower
+  mmap 65536 188.94k (  5.29µs) (± 6.14%)  768B/op   1.25× slower
+read 1048576   9.09k (110.00µs) (± 3.95%)  656B/op  25.94× slower
+mmap 1048576 179.55k (  5.57µs) (± 5.32%)  768B/op   1.31× slower
+
+```
 
 ## Contributing
 

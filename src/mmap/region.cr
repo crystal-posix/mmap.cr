@@ -18,7 +18,7 @@ class Mmap::Region
     @size = size = LibC::SizeT.new(size)
     flags2 = (shared ? LibC::MAP_SHARED : LibC::MAP_PRIVATE)
     flags2 |= LibC::MAP_ANON if file.nil?
-    flags2 |= flags if flags
+    flags2 |= flags.to_i if flags
     fd = file.try(&.fd) || -1
 
     ptr = LibC.mmap(addr, @size, prot, flags2, fd, offset)
