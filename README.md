@@ -4,7 +4,9 @@ mmap() bindings for Crystal
 
 ## Todo:
 - [ ] mremap
-- [ ] mprotect
+- [x] mprotect
+- [ ] madvise
+- [ ] mlock
 - [ ] msync
 
 ## Installation
@@ -24,8 +26,20 @@ mmap() bindings for Crystal
 ```crystal
 require "mmap"
 
-Mmap.open(4096) do |mmap|
-  mmap.to_slice # Do something with slice
+Mmap::Region.open(8192) do |mmap|
+  # Do something with slice
+  mmap.to_slice
+
+  # Not a Slice
+  rw_region = mmap[0, 4096]
+  # Do something with the first 4k
+  rw_region.to_slice
+
+  # Create a guard page
+  guard_region = mmap[4096, 4096]
+  guard_region.mprotect Mmap::Prot::None
+  # Crashes program if accessed
+  guard_region.to_slice[0] = 0_u8
 end
 ```
 
