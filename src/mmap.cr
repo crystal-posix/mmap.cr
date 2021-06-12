@@ -16,17 +16,17 @@ class Mmap
     Fixed = LibC::MAP_FIXED
     #  = LibC::MAP_32BIT
     #  = LibC::MAP_FIXED_NO_REPLACE(Linux) vs EXCL(BSD)
-    # Hugetlb = LibC::MAP_HUGETLB (Linux)
-    # Hugetlb_2mb = LibC::MAP_HUGETLB_2MB(Linux | with HUGETLB)
-    # Hugetlb_1gb = LibC::MAP_HUGETLB_1GB(Linux | with HUGETLB)
+    # Hugetlb = LibC::MAP_HUGETLB # Linux only
+    # Hugetlb_2mb = LibC::MAP_HUGETLB_2MB(Linux requires HUGETLB)
+    # Hugetlb_1gb = LibC::MAP_HUGETLB_1GB(Linux requires HUGETLB)
     # Stack = LibC::MAP_STACK # Linux: flag exists but not implemented
-    # Sync = LibC::MAP_SYNC (Linux)
-    # NoSync = LibC::MAP_NOSYNC (BSD)
-    # NoCore = LibC::MAP_NOCORE (BSD)
-    # Populate = LibC::MAP_POPULATE # Linux
-    # Nonblock = LibC::MAP_NONBLOCK # Linux (requires POPULATE) - currently turns POPULATE in to noop
+    # Sync = LibC::MAP_SYNC # Linux only
+    # NoSync = LibC::MAP_NOSYNC # BSD only
+    # NoCore = LibC::MAP_NOCORE # BSD only
+    # Populate = LibC::MAP_POPULATE # Linux only
+    # Nonblock = LibC::MAP_NONBLOCK # Linux only (requires POPULATE) - currently turns POPULATE in to noop
     # Possibly same as Linux POPULATE & NONBLOCK but functional
-    # PreFaultRead = LibC::MAP_PREFAULT_READ # BSD.
+    # PreFaultRead = LibC::MAP_PREFAULT_READ # BSD only
   end
 
   def self.open(*args)
@@ -55,16 +55,7 @@ class Mmap
     @ptr = ptr.as(Pointer(UInt8))
   end
 
-  def [](idx) : UInt8
-    check_out_of_bounds idx
-    (@ptr + idx).value
-  end
-
-  def []=(idx, val : UInt8) : UInt8
-    check_out_of_bounds idx
-    (@ptr + idx).value = val
-    val
-  end
+  delegate :[], :[]=, to: to_slice
 
   def resize(size, moveable = false) : Nil
     size = LibC::SizeT.new size
@@ -89,7 +80,7 @@ class Mmap
     Slice.new @ptr, @size
   end
 
-  private def check_out_of_bounds(idx) : Nil
-    raise IndexError.new("Out of Bounds") if idx >= @size
+  def finalize
+    close
   end
 end

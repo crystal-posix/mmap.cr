@@ -3,17 +3,19 @@ require "../src/mmap"
 
 describe Mmap do
   it "maps anon memory" do
-    Mmap.open(4096) do |mmap|
+    initial_size = 2048
+    Mmap.open(initial_size) do |mmap|
       mmap[0] = 1_u8
       mmap[0].should eq 1_u8
 
-      mmap[4095] = 2_u8
+      mmap[initial_size - 1] = 2_u8
       expect_raises IndexError do
-        mmap[4096] = 3_u8
+        mmap[initial_size] = 3_u8
       end
 
-      mmap.resize 8192
-      mmap[8191] = 4_u8
+      new_size = initial_size * 2
+      mmap.resize new_size
+      mmap[new_size - 1] = 4_u8
     end
   end
 end
