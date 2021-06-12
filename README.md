@@ -6,8 +6,8 @@ mmap() bindings for Crystal
 - [ ] mremap
 - [x] mprotect
 - [ ] madvise
-- [ ] mlock
-- [ ] msync
+- [x] mlock
+- [x] msync
 
 ## Installation
 
@@ -23,27 +23,55 @@ mmap() bindings for Crystal
 
 ## Usage
 
+### Map anonymous memory
 ```crystal
 require "mmap"
 
-Mmap::Region.open(8192) do |mmap|
+Mmap::Region.open(16384) do |mmap|
   # Do something with slice
   mmap.to_slice
+
 
   # Not a Slice
   rw_region = mmap[0, 4096]
   # Do something with the first 4k
   rw_region.to_slice
 
+
+  key_region = mmap[4096, 4096]
+  # Keep region from being swapped
+  key_region.mlock
+
+
   # Create a guard page
-  guard_region = mmap[4096, 4096]
+  guard_region = mmap[12288, 4096]
   guard_region.mprotect Mmap::Prot::None
   # Crashes program if accessed
   guard_region.to_slice[0] = 0_u8
 end
 ```
 
-TODO: Write usage instructions here
+### Map a file for read
+```crystal
+File.open("a_file.txt", "r") do |file|
+  mmap = Mmap::Region.new(file.info.size, file: file, prot: Mmap::Prot::Read)
+  # May be faster than file.read if the file is cached
+  # May be slower than file.read if the file isn't cached especially without -Dpreview_mt
+  http.response.send mmap.to_slice
+  mmap.close
+end
+```
+
+### Map a file for write
+```crystal
+File.open("a_file.txt", "r") do |file|
+  mmap = Mmap::Region.new(file.info.size, shared: true, file: file)
+  # Do something with slice
+  mmap.to_slice
+  mmap.close
+end
+```
+
 
 ## Contributing
 

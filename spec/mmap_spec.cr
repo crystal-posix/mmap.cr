@@ -52,4 +52,24 @@ describe Mmap do
 
   pending "msync" do
   end
+
+  it "mlock" do
+    Mmap::Region.open(8192) do |mmap|
+      mmap.mlock
+      mmap.munlock
+    end
+  end
+
+  it "write file with msync" do
+    File.open("extend.tmp", "w+") do |file|
+      file.truncate 100
+
+      mmap = Mmap::Region.new(8192, shared: true, file: file)
+      mmap.to_slice[99] = 1_u8
+      mmap.msync
+      mmap.close
+
+      file.gets_to_end.to_slice[99].should eq 1_u8
+    end
+  end
 end

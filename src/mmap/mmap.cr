@@ -11,6 +11,7 @@ module Mmap
     None  = LibC::PROT_NONE
     Read  = LibC::PROT_READ
     Write = LibC::PROT_WRITE
+    ReadWrite = Read | Write
     Exec  = LibC::PROT_EXEC
   end
 
@@ -57,6 +58,18 @@ module Mmap
     ptr = range_checked_pointer(0, @size)
     r = LibC.msync(ptr, @size, LibC::MS_SYNC)
     raise RuntimeError.from_errno("msync") if r != 0
+  end
+
+  def mlock : Nil
+    ptr = range_checked_pointer(0, @size)
+    r = LibC.mlock(ptr, @size)
+    raise RuntimeError.from_errno("mlock") if r != 0
+  end
+
+  def munlock : Nil
+    ptr = range_checked_pointer(0, @size)
+    r = LibC.munlock(ptr, @size)
+    raise RuntimeError.from_errno("munlock") if r != 0
   end
 
   def to_slice : Bytes
