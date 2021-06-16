@@ -10,11 +10,11 @@ class Mmap::Region
     end
   end
 
-  @ptr : UInt8*
+  @pointer : UInt8*
   @size : LibC::SizeT
   getter? closed = false
 
-  def initialize(size, flags = nil, *, prot : Prot = Prot::Read | Prot::Write, shared : Bool = false, file : File? = nil, offset = 0, addr : Pointer(Void)? = nil)
+  def initialize(size, flags = nil, *, prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, addr : Pointer(Void)? = nil)
     @size = size = LibC::SizeT.new(size)
     flags2 = (shared ? LibC::MAP_SHARED : LibC::MAP_PRIVATE)
     flags2 |= LibC::MAP_ANON if file.nil?
@@ -22,9 +22,9 @@ class Mmap::Region
     fd = file.try(&.fd) || -1
 
     ptr = LibC.mmap(addr, @size, prot, flags2, fd, offset)
-    raise RuntimeError.from_errno("mmap") if ptr == LibC::MAP_FAILED
+    raise RuntimeError.from_errno("mmap size=#{size} prot=#{prot} flags=#{flags2} fd=#{fd} offset=#{offset}") if ptr == LibC::MAP_FAILED
 
-    @ptr = ptr.as(Pointer(UInt8))
+    @pointer = ptr.as(Pointer(UInt8))
   end
 
   def [](idx, size) : SubRegion
@@ -32,16 +32,16 @@ class Mmap::Region
     SubRegion.new self, idx, size
   end
 
-  def resize(size, moveable = false) : Nil
+  def resize(size, moveable : Bool = false) : Nil
     check_closed
 
     size = LibC::SizeT.new size
-    flags = moveable ? raise NotImplementedError.new("movable") : 0
+    flags = moveable ? LibC::MREMAP_MAYMOVE : 0
 
-    ptr = LibC.mremap(@ptr, @size, size, flags)
+    ptr = LibC.mremap(@pointer, @size, size, flags)
     raise RuntimeError.from_errno("mremap") if ptr == LibC::MAP_FAILED
 
-    @ptr = ptr.as(Pointer(UInt8))
+    @pointer = ptr.as(Pointer(UInt8))
     @size = size
   end
 
@@ -49,13 +49,13 @@ class Mmap::Region
     return if closed?
     @closed = true
 
-    r = LibC.munmap @ptr, @size
+    r = LibC.munmap @pointer, @size
     raise RuntimeError.from_errno("munmap") if r != 0
   end
 
   def to_slice : Bytes
     check_closed
-    Slice.new @ptr, @size
+    Slice.new @pointer, @size
   end
 
   # :nodoc:
@@ -80,6 +80,6 @@ class Mmap::Region
   # :nodoc:
   def to_unsafe
     check_closed
-    @ptr
+    @pointer
   end
 end
