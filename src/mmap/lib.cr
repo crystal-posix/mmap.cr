@@ -2,6 +2,14 @@ lib LibC
   {% if flag?(:linux) %}
     MS_SYNC = 4
     MREMAP_MAYMOVE = 1
+
+    MAP_HUGETLB = 0x040000
+    MAP_HUGE_2MB = 21 << 26
+    MAP_HUGE_1GB = 30 << 26
+  {% else %}
+    MAP_HUGETLB = 0
+    MAP_HUGE_2MB = 0
+    MAP_HUGE_1GB = 0
   {% end %}
 
   fun mremap(oaddr : Void*, osize : SizeT, nsize : SizeT, flags : Int) : Void*

@@ -20,9 +20,12 @@ module Mmap
     Fixed = LibC::MAP_FIXED
     #  = LibC::MAP_32BIT
     #  = LibC::MAP_FIXED_NO_REPLACE(Linux) vs EXCL(BSD)
-    # Hugetlb = LibC::MAP_HUGETLB # Linux only
-    # Hugetlb_2mb = LibC::MAP_HUGETLB_2MB(Linux requires HUGETLB)
-    # Hugetlb_1gb = LibC::MAP_HUGETLB_1GB(Linux requires HUGETLB)
+    # Linux only.
+    # Only works with anonymous memory.
+    # Would be nice if the man page mentioned that
+    Huge = LibC::MAP_HUGETLB
+    Huge_2mb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_2MB
+    Huge_1gb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_1GB
     # Stack = LibC::MAP_STACK # Linux: flag exists but not implemented
     # Sync = LibC::MAP_SYNC # Linux only
     # NoSync = LibC::MAP_NOSYNC # BSD only
