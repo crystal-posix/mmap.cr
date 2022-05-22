@@ -1,6 +1,8 @@
 require "./*"
 
 module Mmap
+  PAGE_SIZE = LibC.sysconf LibC::SC_PAGESIZE
+
   class Error < Exception
     class Closed < Error
     end
@@ -34,6 +36,9 @@ module Mmap
     # Nonblock = LibC::MAP_NONBLOCK # Linux only (requires POPULATE) - currently turns POPULATE in to noop
     # Possibly same as Linux POPULATE & NONBLOCK but functional
     # PreFaultRead = LibC::MAP_PREFAULT_READ # BSD only
+    #    CryptoKey = LibC::MAP_DONTDUMP | LibC::MAP_DONTFORK # Fails on Linux
+    CryptoKey = LibC::MAP_DONTDUMP
+    GuardPage = LibC::MAP_DONTDUMP
   end
 
   def self.open(*args)
@@ -85,6 +90,15 @@ module Mmap
     ptr = range_checked_pointer(0, @size)
     r = LibC.munlock(ptr, @size)
     raise RuntimeError.from_errno("munlock") if r != 0
+  end
+
+  def crypto_key : Nil
+    madvise Flags::CryptoKey
+  end
+
+  def guard_page : Nil
+    madvise Flags::GuardPage
+    noaccess
   end
 
   def to_slice : Bytes

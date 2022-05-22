@@ -1,15 +1,20 @@
 require "./spec_helper"
 require "../src/mmap"
 
+# Check restricting type to Module
+private def can_to_slice(mmap : Mmap) : Bytes
+  mmap.to_slice
+end
+
 describe Mmap do
   it "maps anon memory" do
     initial_size = 2048
     Mmap::Region.open(initial_size) do |mmap|
-      mmap.to_slice[7] = 7_u8
+      can_to_slice(mmap)[7] = 7_u8
       sub1 = mmap[5, 10]
-      sub1.to_slice[2].should eq 7_u8
+      can_to_slice(sub1)[2].should eq 7_u8
       sub2 = sub1[2, 1]
-      sub2.to_slice[0].should eq 7_u8
+      can_to_slice(sub2)[0].should eq 7_u8
 
       expect_raises IndexError do
         mmap[initial_size, 1]
@@ -51,6 +56,21 @@ describe Mmap do
   end
 
   pending "msync" do
+  end
+
+  it "guard_page" do
+    Mmap::Region.open(8192) do |mmap|
+      mmap.guard_page
+# TODO: trap
+#      mmap.to_slice[0] = 1_u8
+    end
+  end
+
+  it "guard_page" do
+    Mmap::Region.open(8192) do |mmap|
+      mmap.crypto_key
+      mmap.to_slice[0] = 1_u8
+    end
   end
 
   it "mlock" do

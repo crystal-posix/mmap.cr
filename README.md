@@ -32,7 +32,7 @@ Mmap::Region.open(16384) do |mmap|
   mmap.to_slice
 
 
-  # Not a Slice
+  # SubRegions reference the original Mmap::Region, tracking the offset if resized
   rw_region = mmap[0, 4096]
   # Do something with the first 4k
   rw_region.to_slice
@@ -45,7 +45,7 @@ Mmap::Region.open(16384) do |mmap|
 
   # Create a guard page
   guard_region = mmap[12288, 4096]
-  guard_region.noaccess
+  guard_region.guard_page
   # Crashes program if accessed
   guard_region.to_slice[0] = 0_u8
 end
