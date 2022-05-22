@@ -43,12 +43,12 @@ describe Mmap do
 
   it "mprotect" do
     mmap = Mmap::Region.new(8192, prot: Mmap::Prot::None)
-#    Mmap::Region.open(8192, prot: Mmap::Prot::None) do |mmap|
-      sub = mmap[4096, 4096]
-      sub.mprotect Mmap::Prot.flags(Read, Write)
-      sub.to_slice[0] = 1_u8
-#      mmap.to_slice[0] = 1_u8 # Crash
- #   end
+    #    Mmap::Region.open(8192, prot: Mmap::Prot::None) do |mmap|
+    sub = mmap[4096, 4096]
+    sub.mprotect Mmap::Prot.flags(Read, Write)
+    sub.to_slice[0] = 1_u8
+    #      mmap.to_slice[0] = 1_u8 # Crash
+    #   end
     mmap.close
   end
 
@@ -61,8 +61,8 @@ describe Mmap do
   it "guard_page" do
     Mmap::Region.open(8192) do |mmap|
       mmap.guard_page
-# TODO: trap
-#      mmap.to_slice[0] = 1_u8
+      # TODO: trap
+      #      mmap.to_slice[0] = 1_u8
     end
   end
 
