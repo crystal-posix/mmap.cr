@@ -5,7 +5,7 @@ mmap() bindings for Crystal
 ## Todo:
 - [x] mremap
 - [x] mprotect
-- [ ] madvise
+- [x] madvise
 - [x] mlock
 - [x] msync
 

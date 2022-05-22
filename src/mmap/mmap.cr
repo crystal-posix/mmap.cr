@@ -8,11 +8,11 @@ module Mmap
 
   @[Flags]
   enum Prot
-    None  = LibC::PROT_NONE
-    Read  = LibC::PROT_READ
-    Write = LibC::PROT_WRITE
+    None      = LibC::PROT_NONE
+    Read      = LibC::PROT_READ
+    Write     = LibC::PROT_WRITE
     ReadWrite = Read | Write
-    Exec  = LibC::PROT_EXEC
+    Exec      = LibC::PROT_EXEC
   end
 
   @[Flags]
@@ -23,7 +23,7 @@ module Mmap
     # Linux only.
     # Only works with anonymous memory.
     # Would be nice if the man page mentioned that
-    Huge = LibC::MAP_HUGETLB
+    Huge     = LibC::MAP_HUGETLB
     Huge_2mb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_2MB
     Huge_1gb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_1GB
     # Stack = LibC::MAP_STACK # Linux: flag exists but not implemented
@@ -63,9 +63,9 @@ module Mmap
     raise RuntimeError.from_errno("mprotect") if r != 0
   end
 
-  def madvise() : Nil
+  def madvise(advice) : Nil
     ptr = range_checked_pointer(0, @size)
-    r = LibC.madvise(ptr, @size, )
+    r = LibC.madvise(ptr, @size, advice)
     raise RuntimeError.from_errno("madvise") if r != 0
   end
 
