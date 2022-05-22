@@ -1,9 +1,7 @@
+---
 name: mmap
 version: 0.4.0
-
 authors:
-  - Didactic Drunk <1479616+didactic-drunk@users.noreply.github.com>
-
+- Didactic Drunk <1479616+didactic-drunk@users.noreply.github.com>
 crystal: ">= 1.0.0"
-
 license: MIT
