@@ -1,4 +1,10 @@
 # mmap
+[![Crystal CI](https://github.com/crystal-posix/mmap.cr/actions/workflows/crystal.yml/badge.svg)](https://github.com/crystal-posix/mmap.cr/actions/workflows/crystal.yml)
+[![GitHub release](https://img.shields.io/github/release/crystal-posix/mmap.cr.svg)](https://github.com/crystal-posix/mmap.cr/releases)
+![GitHub commits since latest release (by date) for a branch](https://img.shields.io/github/commits-since/crystal-posix/mmap.cr/latest)
+[![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://crystal-posix.github.io/mmap.cr/main)
+
+Crystal bindings to the Zstandard (zstd) compression library
 
 mmap() bindings for Crystal
 
