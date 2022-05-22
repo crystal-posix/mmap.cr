@@ -27,9 +27,10 @@ class Mmap::Region
     @pointer = ptr.as(Pointer(UInt8))
   end
 
+  # *size* limited to Int32 for due to `Slice` limitations
   def [](idx, size) : SubRegion
     range_check idx, size
-    SubRegion.new self, idx, size
+    SubRegion.new self, idx.to_i64, size.to_i32
   end
 
   def resize(size, moveable : Bool = false) : Nil

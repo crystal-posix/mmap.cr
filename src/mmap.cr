@@ -1,0 +1,1 @@
+require "./mmap/mmap.cr"
