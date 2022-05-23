@@ -60,9 +60,14 @@ class Mmap::Region
         rescue ex
           r = LibC.munmap ptr, size
           # Too many errors to recover from
-          abort("munmap during failed copy") if r != 0
+          abort("munmap failed after failed copy") if r != 0
           raise ex
         else
+          # unmap old region
+          r = LibC.munmap @pointer, @size
+          # Too many errors to recover from
+          abort("munmap old region failed") if r != 0
+
           @pointer = ptr.as(Pointer(UInt8))
           @size = size
         end
