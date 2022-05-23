@@ -10,6 +10,17 @@ lib LibC
     MAP_HUGETLB  = 0x040000
     MAP_HUGE_2MB = 21 << 26
     MAP_HUGE_1GB = 30 << 26
+  {% elsif flag?(:darwin) %}
+    # BUG: missing value
+    MS_SYNC = 0
+
+    MAP_DONTFORK   = 0
+    MAP_DONTDUMP   = 0
+    MAP_WIPEONFORK = 0
+
+    MAP_HUGETLB  = 0
+    MAP_HUGE_2MB = 0
+    MAP_HUGE_1GB = 0
   {% else %}
     MAP_DONTFORK   = 0
     MAP_DONTDUMP   = 0
