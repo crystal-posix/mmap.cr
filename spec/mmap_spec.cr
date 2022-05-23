@@ -24,6 +24,7 @@ describe Mmap do
       new_size = initial_size * 2
       mmap.resize new_size
       mmap[initial_size, 1]
+      can_to_slice(sub1)[2].should eq 7_u8
     end
   end
 

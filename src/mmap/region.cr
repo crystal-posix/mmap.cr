@@ -1,8 +1,8 @@
 class Mmap::Region
   include Mmap
 
-  def self.open(*args)
-    mmap = new *args
+  def self.open(size, flags = nil, *, prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, addr : Pointer(Void)? = Pointer(Void).null)
+    mmap = new size, flags, prot: prot, shared: shared, file: file, offset: offset, addr: addr
     begin
       yield mmap
     ensure
@@ -12,17 +12,21 @@ class Mmap::Region
 
   @pointer : UInt8*
   @size : LibC::SizeT
+  @sysflags : Int32
   getter? closed = false
 
-  def initialize(size, flags = nil, *, prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, addr : Pointer(Void)? = nil)
+  def initialize(size, flags = nil, *, @prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, @addr : Pointer(Void) = Pointer(Void).null)
     @size = size = LibC::SizeT.new(size)
-    flags2 = (shared ? LibC::MAP_SHARED : LibC::MAP_PRIVATE)
-    flags2 |= LibC::MAP_ANON if file.nil?
-    flags2 |= flags.to_i if flags
-    fd = file.try(&.fd) || -1
+    sysflags = (shared ? LibC::MAP_SHARED : LibC::MAP_PRIVATE)
+    sysflags |= LibC::MAP_ANON if file.nil?
+    sysflags |= flags.to_i if flags
+    @sysflags = sysflags
+    @fd = file.try(&.fd) || -1
 
-    ptr = LibC.mmap(addr, @size, prot, flags2, fd, offset)
-    raise RuntimeError.from_errno("mmap size=#{size} prot=#{prot} flags=#{flags2} fd=#{fd} offset=#{offset}") if ptr == LibC::MAP_FAILED
+    raise ArgumentError.new("can't specify offset without file") if file.nil? && offset > 0
+
+    ptr = LibC.mmap(@addr, @size, @prot, @sysflags, @fd, offset)
+    raise RuntimeError.from_errno("mmap size=#{size} prot=#{@prot} flags=#{@sysflags} fd=#{@fd} offset=#{offset}") if ptr == LibC::MAP_FAILED
 
     @pointer = ptr.as(Pointer(UInt8))
   end
@@ -33,17 +37,39 @@ class Mmap::Region
     SubRegion.new self, idx.to_i64, size.to_i32
   end
 
-  def resize(size, moveable : Bool = false) : Nil
+  def resize(size, moveable : Bool = true) : Nil
     check_closed
 
     size = LibC::SizeT.new size
-    flags = moveable ? LibC::MREMAP_MAYMOVE : 0
 
-    ptr = LibC.mremap(@pointer, @size, size, flags)
-    raise RuntimeError.from_errno("mremap") if ptr == LibC::MAP_FAILED
+    {% if LibC.has_method?(:mremap) && LibC.has_constant?(:MREMAP_MAYMOVE) %}
+      flags = moveable ? LibC::MREMAP_MAYMOVE : 0
 
-    @pointer = ptr.as(Pointer(UInt8))
-    @size = size
+      ptr = LibC.mremap(@pointer, @size, size, flags)
+      raise RuntimeError.from_errno("mremap") if ptr == LibC::MAP_FAILED
+      @pointer = ptr.as(Pointer(UInt8))
+      @size = size
+    {% else %}
+      # Attempt to enlarge anon memory by mapping new region and copying
+      if @fd == -1 && @addr.null?
+        ptr = LibC.mmap(nil, size, @prot, @sysflags, @fd, 0)
+        raise RuntimeError.from_errno("mmap size=#{size} prot=#{@prot} flags=#{@sysflags} fd=#{@fd}") if ptr == LibC::MAP_FAILED
+
+        begin
+          to_slice.copy_to Slice.new(ptr.as(Pointer(UInt8)), size)
+        rescue ex
+          r = LibC.munmap ptr, size
+          # Too many errors to recover from
+          abort("munmap during failed copy") if r != 0
+          raise ex
+        else
+          @pointer = ptr.as(Pointer(UInt8))
+          @size = size
+        end
+      else
+        raise NotImplementedError.new("missing mremap")
+      end
+    {% end %}
   end
 
   def close : Nil
