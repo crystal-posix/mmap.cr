@@ -43,20 +43,15 @@ describe Mmap do
   end
 
   it "mprotect" do
-    mmap = Mmap::Region.new(8192, prot: Mmap::Prot::None)
-    #    Mmap::Region.open(8192, prot: Mmap::Prot::None) do |mmap|
-    sub = mmap[4096, 4096]
-    sub.mprotect Mmap::Prot.flags(Read, Write)
-    sub.to_slice[0] = 1_u8
-    #      mmap.to_slice[0] = 1_u8 # Crash
-    #   end
-    mmap.close
+    Mmap::Region.open(8192, prot: Mmap::Prot::None) do |mmap|
+      sub = mmap[4096, 4096]
+      sub.mprotect Mmap::Prot.flags(Read, Write)
+      sub.to_slice[0] = 1_u8
+      #      mmap.to_slice[0] = 1_u8 # Crash
+    end
   end
 
   pending "madvise" do
-  end
-
-  pending "msync" do
   end
 
   it "guard_page" do
@@ -67,7 +62,7 @@ describe Mmap do
     end
   end
 
-  it "guard_page" do
+  it "crypto_key" do
     Mmap::Region.open(8192) do |mmap|
       mmap.crypto_key
       mmap.to_slice[0] = 1_u8
@@ -85,10 +80,10 @@ describe Mmap do
     File.open("extend.tmp", "w+") do |file|
       file.truncate 100
 
-      mmap = Mmap::Region.new(8192, shared: true, file: file)
-      mmap.to_slice[99] = 1_u8
-      mmap.msync
-      mmap.close
+      Mmap::Region.open(8192, shared: true, file: file) do |mmap|
+        mmap.to_slice[99] = 1_u8
+        mmap.msync
+      end
 
       file.gets_to_end.to_slice[99].should eq 1_u8
     end
