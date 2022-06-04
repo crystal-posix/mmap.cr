@@ -19,15 +19,15 @@ module Mmap
 
   @[Flags]
   enum Flags
-    Fixed = LibC::MAP_FIXED
+    # Fixed = C::MAP_FIXED
     #  = LibC::MAP_32BIT
     #  = LibC::MAP_FIXED_NO_REPLACE(Linux) vs EXCL(BSD)
     # Linux only.
     # Only works with anonymous memory.
     # Would be nice if the man page mentioned that
-    Huge     = LibC::MAP_HUGETLB
-    Huge_2mb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_2MB
-    Huge_1gb = LibC::MAP_HUGETLB | LibC::MAP_HUGE_1GB
+    Huge     = C::MAP_HUGETLB
+    Huge_2mb = C::MAP_HUGETLB | C::MAP_HUGE_2MB
+    Huge_1gb = C::MAP_HUGETLB | C::MAP_HUGE_1GB
     # Stack = LibC::MAP_STACK # Linux: flag exists but not implemented
     # Sync = LibC::MAP_SYNC # Linux only
     # NoSync = LibC::MAP_NOSYNC # BSD only
@@ -36,9 +36,15 @@ module Mmap
     # Nonblock = LibC::MAP_NONBLOCK # Linux only (requires POPULATE) - currently turns POPULATE in to noop
     # Possibly same as Linux POPULATE & NONBLOCK but functional
     # PreFaultRead = LibC::MAP_PREFAULT_READ # BSD only
-    #    CryptoKey = LibC::MAP_DONTDUMP | LibC::MAP_DONTFORK # Fails on Linux
-    CryptoKey = LibC::MAP_DONTDUMP
-    GuardPage = LibC::MAP_DONTDUMP
+  end
+
+  @[Flags]
+  enum MadvFlags
+    TransparentHuge = C::MADV_HUGEPAGE
+
+    #    CryptoKey = LibC::MADV_DONTDUMP | LibC::MADV_DONTFORK # Fails on Linux
+    CryptoKey = C::MADV_DONTDUMP
+    GuardPage = C::MADV_DONTDUMP
   end
 
   def self.open(*args)
@@ -68,7 +74,7 @@ module Mmap
     raise RuntimeError.from_errno("mprotect") if r != 0
   end
 
-  def madvise(advice) : Nil
+  def madvise(advice : MadvFlags) : Nil
     ptr = range_checked_pointer(0, @size)
     r = LibC.madvise(ptr, @size, advice)
     raise RuntimeError.from_errno("madvise") if r != 0
@@ -76,28 +82,28 @@ module Mmap
 
   def msync : Nil
     ptr = range_checked_pointer(0, @size)
-    r = LibC.msync(ptr, @size, LibC::MS_SYNC)
+    r = C.msync(ptr, @size, C::MS_SYNC)
     raise RuntimeError.from_errno("msync") if r != 0
   end
 
   def mlock : Nil
     ptr = range_checked_pointer(0, @size)
-    r = LibC.mlock(ptr, @size)
+    r = C.mlock(ptr, @size)
     raise RuntimeError.from_errno("mlock") if r != 0
   end
 
   def munlock : Nil
     ptr = range_checked_pointer(0, @size)
-    r = LibC.munlock(ptr, @size)
+    r = C.munlock(ptr, @size)
     raise RuntimeError.from_errno("munlock") if r != 0
   end
 
   def crypto_key : Nil
-    madvise Flags::CryptoKey
+    madvise MadvFlags::CryptoKey
   end
 
   def guard_page : Nil
-    madvise Flags::GuardPage
+    madvise MadvFlags::GuardPage
     noaccess
   end
 

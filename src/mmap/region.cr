@@ -15,7 +15,7 @@ class Mmap::Region
   @sysflags : Int32
   getter? closed = false
 
-  def initialize(size, flags = nil, *, @prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, @addr : Pointer(Void) = Pointer(Void).null)
+  def initialize(size, flags : Flags? = nil, *, @prot : Prot = Prot::ReadWrite, shared : Bool = false, file : File? = nil, offset = 0, @addr : Pointer(Void) = Pointer(Void).null)
     @size = size = LibC::SizeT.new(size)
     sysflags = (shared ? LibC::MAP_SHARED : LibC::MAP_PRIVATE)
     sysflags |= LibC::MAP_ANON if file.nil?
