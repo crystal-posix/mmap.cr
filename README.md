@@ -57,22 +57,22 @@ end
 
 ### Map a file for read
 ```crystal
-File.open("a_file.txt", "r") do |file|
-  mmap = Mmap::Region.new(file.info.size, file: file, prot: Mmap::Prot::Read)
-  # May be faster than file.read if the file is cached
-  # May be slower than file.read if the file isn't cached especially without -Dpreview_mt
-  http.response.send mmap.to_slice
-  mmap.close
+File.open("a_file.txt") do |file|
+  Mmap::Region.new(file.info.size, file: file, prot: Mmap::Prot::Read) do |mmap|
+    # May be faster than file.read if the file is cached
+    # May be slower than file.read if the file isn't cached especially without -Dpreview_mt
+    http.response.send mmap.to_slice
+  end
 end
 ```
 
 ### Map a file for write
 ```crystal
-File.open("a_file.txt", "r") do |file|
-  mmap = Mmap::Region.new(file.info.size, shared: true, file: file)
-  # Do something with slice
-  mmap.to_slice
-  mmap.close
+File.open("a_file.txt", "w") do |file|
+  Mmap::Region.open(file.info.size, shared: true, file: file) do |mmap|
+    # Do something with slice
+    mmap.to_slice
+  end
 end
 ```
 
