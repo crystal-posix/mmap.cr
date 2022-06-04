@@ -22,12 +22,14 @@ module Mmap
     # Fixed = C::MAP_FIXED
     #  = LibC::MAP_32BIT
     #  = LibC::MAP_FIXED_NO_REPLACE(Linux) vs EXCL(BSD)
+
     # Linux only.
     # Only works with anonymous memory.
     # Would be nice if the man page mentioned that
     Huge     = C::MAP_HUGETLB
     Huge_2mb = C::MAP_HUGETLB | C::MAP_HUGE_2MB
     Huge_1gb = C::MAP_HUGETLB | C::MAP_HUGE_1GB
+
     # Stack = LibC::MAP_STACK # Linux: flag exists but not implemented
     # Sync = LibC::MAP_SYNC # Linux only
     # NoSync = LibC::MAP_NOSYNC # BSD only
@@ -40,7 +42,8 @@ module Mmap
 
   @[Flags]
   enum MadvFlags
-    TransparentHuge = C::MADV_HUGEPAGE
+    # Transparent huge pages - Linux only
+    Huge = C::MADV_HUGEPAGE
 
     #    CryptoKey = LibC::MADV_DONTDUMP | LibC::MADV_DONTFORK # Fails on Linux
     CryptoKey = C::MADV_DONTDUMP

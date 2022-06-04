@@ -6,7 +6,10 @@
 
 mmap() bindings for Crystal
 
-## Todo:
+## Design
+Platform specific flags are ignored when unsupported and it is safe to do so.
+
+## Supports:
 - [x] mremap
 - [x] mprotect
 - [x] madvise
